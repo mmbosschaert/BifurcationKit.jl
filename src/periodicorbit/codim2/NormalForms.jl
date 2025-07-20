@@ -1,22 +1,23 @@
 function get_normal_form(prob::AbstractBifurcationProblem,
                         br::ContResult{ <: TwoParamPeriodicOrbitCont}, id_bif::Int ;
-                        nev = length(eigenvalsfrombif(br, id_bif)),
+                        # nev = length(eigenvalsfrombif(br, id_bif)),
                         verbose = false,
                         ζs = nothing,
                         lens = getlens(br),
-                        Teigvec = _getvectortype(br),
+                        # Teigvec = _getvectortype(br),
                         scaleζ = norm,
                         autodiff = false,
                         δ = getdelta(prob),
                         k...
                     )
     bifpt = br.specialpoint[id_bif]
-    if (bifpt.type in (:endpoint,)) || ~(bifpt.type in (:cusp, :R1, :R2, :R3, :R4, :gpd))
+    if (bifpt.type in (:endpoint,)) || ~(bifpt.type in (:cusp, :R1, :R2, :R3, :gpd))
         error("Normal form for $(bifpt.type) not implemented")
     end
 
     # parameters for normal form
-    kwargs_nf = (;nev, verbose, lens, Teigvec, scaleζ)
+    # kwargs_nf = (;nev, verbose, lens, Teigvec, scaleζ)
+    kwargs_nf = (;verbose, lens, scaleζ)
 
     if bifpt.type == :R1
         return R1_normal_form(prob, br, id_bif; kwargs_nf..., autodiff)
@@ -34,7 +35,7 @@ function get_normal_form(prob::AbstractBifurcationProblem,
     error("Normal form for $(bifpt.type) not yet implemented.")
 end
 
-for op in (:CuspPO, :R1, :R2, :R3, :R4, :GPD, :FoldNS, :FoldPD)
+for op in (:CuspPO, :R1, :R2, :R3, :GPD, :FoldNS, :FoldPD)
     @eval begin
         function $(Symbol(op, :_normal_form))(probma::AbstractMABifurcationProblem{Tprob}, 
                                 br,ind_bif;

@@ -96,6 +96,7 @@ module BifurcationKit
     include("periodicorbit/codim2/MinAugNS.jl")
     include("periodicorbit/codim2/BifurcationPoints.jl")
     include("periodicorbit/codim2/NormalForms.jl")
+    include("periodicorbit/codim2/R4.jl")
 
     # wave problem
     include("wave/WaveProblem.jl")
@@ -174,4 +175,6 @@ module BifurcationKit
 
     # waves
     export TWProblem
+
+    export R4_normal_form
 end

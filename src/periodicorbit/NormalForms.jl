@@ -793,7 +793,7 @@ function period_doubling_normal_form_prm(pbwrap::WrapPOColl,
     nj = size(J, 1)
     J[end, :] .= rand(nj)
     J[:, end] .= rand(nj)
-    # enforce PD boundary condition
+    # emnforce PD boundary condition
     J[end-N:end-1, 1:N] .= I(N)
     rhs = zeros(nj); rhs[end] = 1
     q = J  \ rhs; q = q[1:end-1]; q ./= norm(q)
@@ -985,9 +985,12 @@ function neimark_sacker_normal_form(pbwrap::WrapPOColl,
     v₁ₛ = get_time_slices(coll, vcat(v₁,1))
 
                 if _NRMDEBUG; v₁ₛ .*= (-0.4238149014771724 - 0.32924318979676237im)/v₁ₛ[1,1]; end
-                # re-scale the eigenvector
-                v₁ₛ ./= sqrt(∫(v₁ₛ, v₁ₛ))
-                v₁ = vec(v₁ₛ)
+    # re-scale the eigenvector
+    v₁ₛ ./= sqrt(∫(v₁ₛ, v₁ₛ))
+    v₁ = vec(v₁ₛ)
+
+    # Main.GLMakie.scatter!(real.(v₁ₛ[1,:]), real.(v₁ₛ[2,:]),real.(v₁ₛ[3,:]), color=:orangered)
+    # Main.GLMakie.scatter!(imag.(v₁ₛ[1,:]), imag.(v₁ₛ[2,:]),imag.(v₁ₛ[3,:]), color=:royalblue)
 
     @assert ∫(v₁ₛ, v₁ₛ) ≈ 1
 

@@ -615,6 +615,7 @@ Compute the jacobian of the problem defining the periodic orbits by orthogonal c
                                     u::AbstractVector{𝒯},
                                     pars; 
                                     _transpose::Val{TransposeBool} = Val(false),
+                                    ρB = -1,
                                     ρD = one(𝒯),
                                     ρF = one(𝒯),
                                     ρI = zero(𝒯)) where {𝒯, TransposeBool}
@@ -635,7 +636,7 @@ Compute the jacobian of the problem defining the periodic orbits by orthogonal c
 
     # put boundary condition
     J[nJ-n:nJ-1, nJ-n:nJ-1] .= In
-    J[nJ-n:nJ-1, 1:n] .= (-1) .* In
+    J[nJ-n:nJ-1, 1:n] .= ρB.* In
 
     # loop over the mesh intervals
     rg = UnitRange(1, m+1)
