@@ -151,8 +151,10 @@ function (l::EigKrylovKit{T, vectype})(J, _nev; kwargs...) where {T, vectype}
     # note that there is no need to order the eigen-elements. KrylovKit does it
     # with the option `which`, by decreasing order.
     kw = (verbosity = l.verbose,
-            krylovdim = l.dim, maxiter = l.maxiter,
-            tol = l.tol, issymmetric = l.issymmetric,
+            krylovdim = l.dim, 
+            maxiter = l.maxiter,
+            tol = l.tol, 
+            issymmetric = l.issymmetric,
             ishermitian = l.ishermitian)
     if J isa AbstractMatrix && isnothing(l.x₀)
         nev = min(_nev, size(J, 1))
@@ -206,13 +208,15 @@ EigArnoldiMethod(;sigma = nothing, which = ArnoldiMethod.LR(), x₀ = nothing, k
 function (l::EigArnoldiMethod)(J, nev; kwargs...)
     if J isa AbstractMatrix
         if isnothing(l.sigma)
-            decomp, history = ArnoldiMethod.partialschur(J; nev, which = l.which,
+            decomp, history = ArnoldiMethod.partialschur(J; nev, 
+                                                         which = l.which,
                                                          l.kwargs...)
         else
             F = factorize(l.sigma * LinearAlgebra.I - J)
             Jmap = LinearMaps.LinearMap{eltype(J)}((y, x) -> ldiv!(y, F, x), size(J, 1);
                                         ismutating = true)
-            decomp, history = ArnoldiMethod.partialschur(Jmap; nev, which = l.which,
+            decomp, history = ArnoldiMethod.partialschur(Jmap; nev, 
+                                                         which = l.which,
                                                          l.kwargs...)
         end
     else
@@ -254,4 +258,33 @@ function gev(l::EigArnoldiMethod, A, B, nev; kwargs...)
         throw("Not defined yet. Please open an issue or make a Pull Request")
     end
     return Complex.(values), Complex.(ϕ)
+end
+####################################################################################################
+"""
+$(TYPEDEF)
+
+Create an eigensolver based on Shift-Invert strategy. Basically, one compute the eigen-elements of (J - σ⋅I)⁻¹.
+
+## Fields
+
+$(TYPEDFIELDS)
+"""
+struct ShiftInvert{T, Tls <: AbstractLinearSolver, Teig <: AbstractEigenSolver} <: AbstractEigenSolver
+    "Shift."
+    sigma::T
+    "Linear solver to compute (J - σ⋅I)⁻¹."
+    ls::Tls
+    "Eigen-solver to compute the eigenvalues of (J - σ⋅I)⁻¹."
+    eig::Teig
+end
+
+geteigenvector(eigsolve::ShiftInvert, vecs, n::Union{Int, AbstractVector{Int64}}) = geteigenvector(eigsolve.eig, vecs, n)
+
+function (eigen::ShiftInvert)(J, nev; kwargs...)
+    # (a₀ * I + a₁ * J) * x = rhs
+    function Jmap(rhs)
+        eigen.ls(J, rhs; a₀ = -eigen.sigma , a₁ = 1)[1]
+    end
+    vals, vecs, cv, n = @time "SI-ev" eigen.eig(Jmap, nev; kwargs...)
+    return 1 ./vals .+ eigen.sigma, vecs, cv, n
 end
